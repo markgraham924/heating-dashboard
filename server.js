@@ -45,10 +45,6 @@ app.use('/api', createProxyMiddleware({
   }
 }));
 
-// Serve static files from dist
-const distPath = join(__dirname, 'dist');
-app.use(express.static(distPath));
-
 // Generate config.js with runtime environment variables
 app.get('/config.js', (req, res) => {
   const config = `
@@ -63,7 +59,11 @@ console.log('Runtime config injected:', window.ENV.VITE_HA_URL ? 'HA_URL set' : 
   res.send(config);
 });
 
-// Fallback to index.html for client-side routing - must be last
+// Serve static files from dist
+const distPath = join(__dirname, 'dist');
+app.use(express.static(distPath));
+
+// Fallback to index.html for client-side routing
 app.use((req, res) => {
   res.sendFile(join(distPath, 'index.html'));
 });
