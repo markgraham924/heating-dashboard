@@ -1,7 +1,23 @@
 import axios from 'axios';
 
-const haUrl = import.meta.env.VITE_HA_URL;
-const haToken = import.meta.env.VITE_HA_TOKEN;
+// Get config from window.ENV (runtime) or import.meta.env (build time)
+const getConfig = () => {
+  if (typeof window !== 'undefined' && (window as any).ENV) {
+    const env = (window as any).ENV;
+    return {
+      haUrl: env.VITE_HA_URL !== '__VITE_HA_URL__' ? env.VITE_HA_URL : import.meta.env.VITE_HA_URL,
+      haToken: env.VITE_HA_TOKEN !== '__VITE_HA_TOKEN__' ? env.VITE_HA_TOKEN : import.meta.env.VITE_HA_TOKEN,
+    };
+  }
+  return {
+    haUrl: import.meta.env.VITE_HA_URL,
+    haToken: import.meta.env.VITE_HA_TOKEN,
+  };
+};
+
+const config = getConfig();
+const haUrl = config.haUrl;
+const haToken = config.haToken;
 
 console.log('HA Config:', { haUrl, haToken: haToken ? 'SET' : 'MISSING' });
 
@@ -14,7 +30,7 @@ if (typeof window !== 'undefined') {
 }
 
 const api = axios.create({
-  baseURL: '/api', // Use proxy path instead of full URL
+  baseURL: haUrl ? `${haUrl}/api` : '/api', // Use full URL in production, proxy in dev
   headers: {
     'Authorization': `Bearer ${haToken}`,
     'Content-Type': 'application/json',
