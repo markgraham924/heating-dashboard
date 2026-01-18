@@ -26,11 +26,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install a simple HTTP server to serve the dist folder
-RUN npm install -g serve
+# Copy package files and install production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
 
 # Copy built app from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy server file
+COPY server.js ./
 
 # Copy entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
