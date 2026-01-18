@@ -30,7 +30,7 @@ if (typeof window !== 'undefined') {
 }
 
 const api = axios.create({
-  baseURL: haUrl ? `${haUrl}/api` : '/api', // Use full URL in production, proxy in dev
+  baseURL: '/api', // Always use relative path - proxy handles routing
   headers: {
     'Authorization': `Bearer ${haToken}`,
     'Content-Type': 'application/json',
