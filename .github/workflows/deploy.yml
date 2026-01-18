@@ -1,0 +1,47 @@
+name: Build and Deploy to Portainer
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, portainer]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        run: |
+          docker build -t heating-dashboard:latest .
+          docker build -t heating-dashboard:${{ github.sha }} .
+      
+      - name: Deploy to Portainer via Docker
+        env:
+          VITE_HA_URL: ${{ secrets.HA_URL }}
+          VITE_HA_TOKEN: ${{ secrets.HA_TOKEN }}
+        run: |
+          # Stop and remove existing container if it exists
+          docker stop heating-dashboard || true
+          docker rm heating-dashboard || true
+          
+          # Run new container
+          docker run -d \
+            --name heating-dashboard \
+            --restart unless-stopped \
+            -p 3000:3000 \
+            -e VITE_HA_URL="${{ secrets.HA_URL }}" \
+            -e VITE_HA_TOKEN="${{ secrets.HA_TOKEN }}" \
+            heating-dashboard:latest
+      
+      - name: Verify deployment
+        run: |
+          sleep 5
+          docker ps | grep heating-dashboard
+          echo "Heating Dashboard deployed successfully!"
